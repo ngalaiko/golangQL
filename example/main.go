@@ -3,6 +3,7 @@ package main
 import (
 	"github.com/ngalayko/golangQL"
 	"fmt"
+	"encoding/json"
 )
 
 func main() {
@@ -14,12 +15,25 @@ func main() {
 		Nephews: []*Duck{&louie, &dewey, &huey},
 	}
 
+	jsonString, err := json.Marshal(donald)
+	if err != nil {
+		panic(err)
+	}
+
 	filtred, err := golangQL.Filter(donald, "{name {firstName lastName} nephews { name { firstName } hat } ")
 	if err != nil {
 		panic(err)
 	}
 
-	fmt.Println(filtred)
+	filteredJsonStr, err := json.Marshal(filtred)
+	if err != nil {
+		panic(err)
+	}
+
+	fmt.Println(string(jsonString))
+	//"name":{"firstName":"Donald","lastName":"Duck"},"hat":"","nephews":[{"name":{"firstName":"Louie","lastName":"Duck"},"hat":"green","nephews":null},{"name":{"firstName":"Dewey","lastName":"Duck"},"hat":"blue","nephews":null},{"name":{"firstName":"Huey","lastName":"Duck"},"hat":"red","nephews":null}]}
+	fmt.Println(string(filteredJsonStr))
+	//{"name":{"firstName":"Donald","lastName":"Duck"},"nephews":[{"hat":"green","name":{"firstName":"Louie"}},{"hat":"blue","name":{"firstName":"Dewey"}},{"hat":"red","name":{"firstName":"Huey"}}]}
 }
 
 type DuckName struct {
