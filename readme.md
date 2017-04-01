@@ -1,7 +1,36 @@
 # golangQL
 
-golangQL allows you to use [graphQL](http://graphql.org/) syntactics to select fields from `json`-tagged 
-structs in Golang.
+golangQL allows you to use [graphQL](http://graphql.org/) syntactics to select fields from `json`-tagged structs in Golang. 
+
+## Features
+All filter functions are cached, for field structs also, so if you request 
+```json
+{
+  name {
+    firstName 
+    lastName
+  } 
+  nephews { 
+    name { 
+      firstName 
+    } 
+  hat 
+} 
+```
+it also will cache
+```json
+nephews { 
+    name { 
+      firstName 
+    } 
+```
+and 
+```
+name {
+    firstName 
+    lastName
+  } 
+```
 
 ## Installation
 To install the library, run:
