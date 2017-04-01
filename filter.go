@@ -2,7 +2,6 @@ package golangQL
 
 import (
 	"reflect"
-	"strings"
 	"sync"
 )
 
@@ -152,13 +151,4 @@ func (g *golangQL) newStructFilter(typ reflect.Type, tree *node) filterFunc {
 
 		return resultMap, nil
 	}
-}
-
-func (g *golangQL) fieldParseTag(tag string) string {
-	if i := strings.Index(tag, ","); i != -1 {
-		name := tag[:i]
-		tag = tag[i+1:]
-		return name
-	}
-	return tag
 }
