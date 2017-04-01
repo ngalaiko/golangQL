@@ -1,15 +1,18 @@
 package golangQL
 
+import (
+	"sync"
+)
+
+type golangQL struct {
+	sync.RWMutex
+	filters map[cacheKey]filterFunc
+}
+
+var instance = &golangQL{
+	filters: map[cacheKey]filterFunc{},
+}
 
 func Filter(v interface{}, query string) (interface{}, error) {
-	if len(query) == 0 {
-		return v, nil
-	}
-
-	tree, err := parse(query)
-	if err != nil {
-		return nil, err
-	}
-
-	return filter(v, tree)
+	return instance.filter(v, query)
 }

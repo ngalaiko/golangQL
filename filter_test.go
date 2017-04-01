@@ -38,6 +38,16 @@ var (
 	valueE = reflect.ValueOf("e")
 )
 
+func BenchmarkFilter(b *testing.B) {
+	s := newTestStruct()
+	s.E = newTestStruct()
+	query := "{a c e { c } }"
+
+	for i := 0; i < b.N; i++ {
+		instance.filter(s, query)
+	}
+}
+
 func TestFilterJsonFields__should_filter_struct_ptr(t *testing.T) {
 	s := newTestStruct()
 	s.E = newTestStruct()
@@ -55,6 +65,16 @@ func TestFilterJsonFields__should_filter_struct_ptr(t *testing.T) {
 	assert.True(t, v.MapIndex(valueE).IsValid())
 	assert.True(t, v.MapIndex(valueE).Elem().MapIndex(valueC).IsValid())
 	assert.False(t, v.MapIndex(valueB).IsValid())
+}
+
+func TestFilterJsonFields__should_not_filter_nil_ptr(t *testing.T) {
+	query := ""
+	res, err := Filter(nil, query)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	assert.Equal(t, nil, res)
 }
 
 func TestFilterJsonFields__should_not_filter_empty_query(t *testing.T) {
