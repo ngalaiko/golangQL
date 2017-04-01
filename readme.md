@@ -4,7 +4,7 @@ golangQL allows you to use [graphQL](http://graphql.org/) syntactics to select f
 
 ## Features
 All filter functions are cached, for field structs also, so if you request 
-```json
+```graphQL
 {
   name {
     firstName 
@@ -18,19 +18,24 @@ All filter functions are cached, for field structs also, so if you request
 } 
 ```
 it also will cache
-```json
-nephews { 
-    name { 
-      firstName 
-    } 
+```graphQL
+{
+  nephews { 
+      name { 
+        firstName 
+      } 
+}
 ```
 and 
+```graphQL
+{
+  name {
+      firstName 
+      lastName
+    } 
+ }
 ```
-name {
-    firstName 
-    lastName
-  } 
-```
+requests for the relevant types
 
 ## Installation
 To install the library, run:
@@ -40,8 +45,3 @@ go get github.com/ngalayko/golangQL
 
 ## Use
 See [example](example) folder
-
-## Third Party Libraries
-| Name          | Author        | Description  |
-|:-------------:|:-------------:|:------------:|
-| [testify](github.com/stretchr/testify/assert) | [Stretchr, Inc. ](https://github.com/sogko) | A sacred extension to the standard go testing package
