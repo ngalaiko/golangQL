@@ -82,6 +82,11 @@ func filterStructFields(v interface{}, out *map[string]interface{}, level *level
 				return err
 			}
 
+			if reflect.TypeOf(embeded).Kind() != reflect.Map {
+				(*out)[tagName] = rv
+				continue
+			}
+
 			embededMapValue := reflect.ValueOf(embeded)
 			for _, key := range embededMapValue.MapKeys() {
 				(*out)[key.String()] = embededMapValue.MapIndex(key).Interface()
