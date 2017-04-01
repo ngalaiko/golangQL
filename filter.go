@@ -94,14 +94,13 @@ func (g *golangQL) newPtrFilter(typ reflect.Type, tree *node) filterFunc {
 }
 
 func (g *golangQL) newSliceFilter(typ reflect.Type, tree *node) filterFunc {
+	elemFilter := g.getFilter(typ.Elem(), tree)
+
 	return func(val reflect.Value, tree *node) (interface{}, error) {
 		resultMap := make([]map[string]interface{}, val.Len())
 		resultMapValue := reflect.ValueOf(resultMap)
 		for i := 0; i < val.Len(); i++ {
 			v := val.Index(i)
-
-			elementType := v.Type()
-			elemFilter := g.getFilter(elementType, tree)
 
 			filteredStruct, err := elemFilter(v, tree)
 			if err != nil {
@@ -118,51 +117,36 @@ func (g *golangQL) newSliceFilter(typ reflect.Type, tree *node) filterFunc {
 }
 
 func (g *golangQL) newStructFilter(typ reflect.Type, tree *node) filterFunc {
+	fields := fieldsForType(typ)
+	for i := range fields {
+		fields[i].child = tree.findChildByName(fields[i].tag)
+		if fields[i].child != nil {
+			fields[i].filter = g.getFilter(fields[i].typ, fields[i].child)
+			continue
+		}
+
+		fields[i].filter = g.getFilter(fields[i].typ, tree)
+	}
 
 	return func(val reflect.Value, tree *node) (interface{}, error) {
 		typ := val.Type()
 		resultMap := make(map[string]interface{}, typ.NumField())
 
-		for i := 0; i < typ.NumField(); i++ {
-			field := typ.Field(i)
-			tag, ok := field.Tag.Lookup("json")
-			tagName := g.fieldParseTag(tag)
-
-			if !ok {
-				elemFilter := g.getFilter(field.Type, tree)
-
-				embeded, err := elemFilter(val.Field(i), tree)
-				if err != nil {
-					return nil, err
-				}
-
-				if reflect.TypeOf(embeded).Kind() != reflect.Map {
-					resultMap[tagName] = val
-					continue
-				}
-
-				embededMapValue := reflect.ValueOf(embeded)
-				for _, key := range embededMapValue.MapKeys() {
-					resultMap[key.String()] = embededMapValue.MapIndex(key).Interface()
-				}
-				continue
-			}
-
-			child := tree.findChildByName(tagName)
+		for _, field := range fields {
+			fieldValue := fieldByIndex(val, field.index)
+			child := tree.findChildByName(field.tag)
 			if child != nil {
-				elemFilter := g.getFilter(typ, child)
-
-				childStruct, err := elemFilter(val.Field(i).Elem(), child)
+				childStruct, err := field.filter(fieldValue, child)
 				if err != nil {
 					return nil, err
 				}
 
-				resultMap[tagName] = childStruct
+				resultMap[field.tag] = childStruct
 				continue
 			}
 
-			if tree.containsField(tagName) {
-				resultMap[tagName] = val.Field(i).Interface()
+			if tree.containsField(field.tag) {
+				resultMap[field.tag] = fieldValue.Interface()
 			}
 		}
 
