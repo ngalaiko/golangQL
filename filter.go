@@ -19,7 +19,7 @@ func (g *golangQL) filter(v interface{}, query string) (interface{}, error) {
 	}
 
 	val := reflect.ValueOf(v)
-	filter := g.getFilter(val, tree)
+	filter := g.getFilter(val.Type(), tree)
 
 	result, err := filter(val, tree)
 	if err != nil {
@@ -29,10 +29,9 @@ func (g *golangQL) filter(v interface{}, query string) (interface{}, error) {
 	return result, nil
 }
 
-func (g *golangQL) getFilter(val reflect.Value, tree *node) filterFunc {
-	key := newCacheKey(val.Type(), tree)
-
+func (g *golangQL) getFilter(typ reflect.Type, tree *node) filterFunc {
 	g.RLock()
+	key := newCacheKey(typ, tree)
 	f := g.filters[key]
 	g.RUnlock()
 	if f != nil {
@@ -54,7 +53,7 @@ func (g *golangQL) getFilter(val reflect.Value, tree *node) filterFunc {
 	}
 	g.Unlock()
 
-	f = g.newFilter(val.Type(), tree)
+	f = g.newFilter(typ, tree)
 	g.Lock()
 	g.filters[key] = f
 	g.Unlock()
@@ -85,7 +84,7 @@ func defaultFilter() filterFunc {
 }
 
 func (g *golangQL) newPtrFilter(typ reflect.Type, tree *node) filterFunc {
-	elemFilter := g.newFilter(typ.Elem(), tree)
+	elemFilter := g.getFilter(typ.Elem(), tree)
 
 	return func(val reflect.Value, tree *node) (interface{}, error) {
 		v := val.Elem()
@@ -102,7 +101,7 @@ func (g *golangQL) newSliceFilter(typ reflect.Type, tree *node) filterFunc {
 			v := val.Index(i)
 
 			elementType := v.Type()
-			elemFilter := g.newFilter(elementType, tree)
+			elemFilter := g.getFilter(elementType, tree)
 
 			filteredStruct, err := elemFilter(v, tree)
 			if err != nil {
@@ -130,7 +129,7 @@ func (g *golangQL) newStructFilter(typ reflect.Type, tree *node) filterFunc {
 			tagName := g.fieldParseTag(tag)
 
 			if !ok {
-				elemFilter := g.newFilter(field.Type, tree)
+				elemFilter := g.getFilter(field.Type, tree)
 
 				embeded, err := elemFilter(val.Field(i), tree)
 				if err != nil {
@@ -151,7 +150,7 @@ func (g *golangQL) newStructFilter(typ reflect.Type, tree *node) filterFunc {
 
 			child := tree.findChildByName(tagName)
 			if child != nil {
-				elemFilter := g.newFilter(typ, child)
+				elemFilter := g.getFilter(typ, child)
 
 				childStruct, err := elemFilter(val.Field(i).Elem(), child)
 				if err != nil {
