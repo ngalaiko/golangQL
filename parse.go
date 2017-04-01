@@ -18,65 +18,65 @@ var (
 	ErrWrongGQLFormat = errors.New("errors.GQLWrongFormat")
 )
 
-func parse(str string) (*level, error) {
-	str, err := formatString(str)
+func parse(query string) (*node, error) {
+	query, err := formatQuery(query)
 	if err != nil {
 		return nil, err
 	}
 
-	baseLevel := newLevel(baseFieldName)
-	currentLevel := baseLevel
+	tree := newNode(baseFieldName)
+	currentNode := tree
 
 	var buf bytes.Buffer
-	for _, char := range str {
+	for _, char := range query {
 		switch char {
-		case openComma: // level down
-			newLevel := newLevel(buf.String())
-			newLevel.parent = currentLevel
-			currentLevel.appendSublevel(newLevel)
+		case openComma:
+			newNode := newNode(buf.String())
+			newNode.parent = currentNode
+			currentNode.appendChild(newNode)
 
-			currentLevel = newLevel
+			currentNode = newNode
 
 			buf.Reset()
-		case closeComma: // level up
-			if currentLevel.parent == nil {
+		case closeComma:
+			if currentNode.parent == nil {
 				return nil, ErrWrongGQLFormat
 			}
 
-			currentLevel = currentLevel.parent
-		case space: // append buffer to current level
-			currentLevel.fields = append(currentLevel.fields, buf.String())
+			currentNode = currentNode.parent
+		case space:
+			currentNode.fields = append(currentNode.fields, buf.String())
 			buf.Reset()
-		default: // append buffer
+		default:
 			buf.WriteRune(char)
 		}
 	}
 
-	return baseLevel, nil
+	return tree, nil
 }
 
-func formatString(str string) (string, error) {
-	if len(str) == 0 {
+func formatQuery(query string) (string, error) {
+	if len(query) == 0 {
 		return "", ErrWrongGQLFormat
 	}
 
-	str = strings.Replace(str, "}", " }", -1) // add spaces
+	query = strings.Replace(query, "}", " }", -1)
 
-	str, err := deleteDoubleSpaces(str)
+	query, err := deleteDoubleSpaces(query)
 	if err != nil {
 		return "", err
 	}
 
-	if str[0] != openComma || str[len(str)-1] != closeComma {
+	if query[0] != openComma || query[len(query)-1] != closeComma {
 		return "", ErrWrongGQLFormat
 	}
 
-	str = strings.Replace(str, "{ ", "{", -1) // get rid of '{ '
-	str = strings.Replace(str, " {", "{", -1) // get rid of ' {'
-	str = strings.Replace(str, "} ", "}", -1) // get rid of '} '
-	str = strings.Trim(str, "{}")
+	query = strings.Replace(query, "{ ", "{", -1)
+	query = strings.Replace(query, " {", "{", -1)
+	query = strings.Replace(query, "} ", "}", -1)
+	query = strings.Trim(query, "{}")
 
-	return str, nil
+	return query, nil
 }
 
 func deleteDoubleSpaces(str string) (string, error) {

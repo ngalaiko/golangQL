@@ -1,31 +1,29 @@
 package golangQL
 
-// level
-
-type level struct {
-	name      string
-	fields    []string
-	sublevels []*level
-	parent    *level
+type node struct {
+	name     string
+	fields   []string
+	children []*node
+	parent   *node
 }
 
-func (t *level) appendSublevel(subLevel *level) {
-	t.sublevels = append(t.sublevels, subLevel)
+func (t *node) appendChild(child *node) {
+	t.children = append(t.children, child)
 }
 
-func (t *level) findSublevel(fieldName string) *level {
-	for _, sublevel := range t.sublevels {
-		if sublevel.name == fieldName {
-			return sublevel
+func (t *node) findChild(childName string) *node {
+	for _, child := range t.children {
+		if child.name == childName {
+			return child
 		}
 	}
 
 	return nil
 }
 
-func (t *level) containsField(fieldName string) bool {
+func (t *node) containsField(childName string) bool {
 	for _, field := range t.fields {
-		if fieldName == field {
+		if childName == field {
 			return true
 		}
 	}
@@ -33,11 +31,11 @@ func (t *level) containsField(fieldName string) bool {
 	return false
 }
 
-func newLevel(name string) *level {
-	return &level{
+func newNode(name string) *node {
+	return &node{
 		name:      name,
 		fields:    []string{},
-		sublevels: []*level{},
+		children: []*node{},
 		parent:    nil,
 	}
 }

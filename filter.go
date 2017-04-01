@@ -5,28 +5,15 @@ import (
 	"strings"
 )
 
-func Filter(v interface{}, fields string) (interface{}, error) {
-	if len(fields) == 0 {
-		return v, nil
-	}
-
-	baseLevel, err := parse(fields)
-	if err != nil {
-		return nil, err
-	}
-
-	return filter(v, baseLevel)
-}
-
-func filter(v interface{}, baseLevel *level) (interface{}, error) {
+func filter(v interface{}, tree *node) (interface{}, error) {
 	typ := reflect.TypeOf(v)
 	switch typ.Kind() {
 	case reflect.Ptr:
-		return filterPtr(v, baseLevel)
+		return filterPtr(v, tree)
 	case reflect.Struct:
-		return filterStruct(v, baseLevel)
+		return filterStruct(v, tree)
 	case reflect.Slice:
-		return filterSlice(v, baseLevel)
+		return filterSlice(v, tree)
 	default:
 		return v, nil
 	}
@@ -34,19 +21,19 @@ func filter(v interface{}, baseLevel *level) (interface{}, error) {
 	return v, nil
 }
 
-func filterPtr(v interface{}, baseLevel *level) (interface{}, error) {
+func filterPtr(v interface{}, tree *node) (interface{}, error) {
 	rv := reflect.ValueOf(v).Elem()
-	return filter(rv.Interface(), baseLevel)
+	return filter(rv.Interface(), tree)
 }
 
-func filterSlice(v interface{}, baseLevel *level) (interface{}, error) {
+func filterSlice(v interface{}, tree *node) (interface{}, error) {
 	s := reflect.ValueOf(v)
 
 	out := make([]map[string]interface{}, s.Len())
 	outV := reflect.ValueOf(out)
 	for i := 0; i < s.Len(); i++ {
 		v := s.Index(i).Interface()
-		filteredStruc, err := filter(v, baseLevel)
+		filteredStruc, err := filter(v, tree)
 		if err != nil {
 			return nil, err
 		}
@@ -58,18 +45,18 @@ func filterSlice(v interface{}, baseLevel *level) (interface{}, error) {
 	return out, nil
 }
 
-func filterStruct(v interface{}, baseLevel *level) (interface{}, error) {
+func filterStruct(v interface{}, tree *node) (interface{}, error) {
 	rt := reflect.TypeOf(v)
 	out := make(map[string]interface{}, rt.NumField())
 
-	if err := filterStructFields(v, &out, baseLevel); err != nil {
+	if err := filterStructFields(v, &out, tree); err != nil {
 		return nil, err
 	}
 
 	return out, nil
 }
 
-func filterStructFields(v interface{}, out *map[string]interface{}, level *level) error {
+func filterStructFields(v interface{}, out *map[string]interface{}, tree *node) error {
 	rt, rv := reflect.TypeOf(v), reflect.ValueOf(v)
 	for i := 0; i < rt.NumField(); i++ {
 		field := rt.Field(i)
@@ -77,7 +64,7 @@ func filterStructFields(v interface{}, out *map[string]interface{}, level *level
 		tagName := fieldParseTag(tag)
 
 		if !ok {
-			embeded, err := filter(rv.Field(i).Interface(), level)
+			embeded, err := filter(rv.Field(i).Interface(), tree)
 			if err != nil {
 				return err
 			}
@@ -94,7 +81,7 @@ func filterStructFields(v interface{}, out *map[string]interface{}, level *level
 			continue
 		}
 
-		subfield := level.findSublevel(tagName)
+		subfield := tree.findChild(tagName)
 		if subfield != nil {
 			subStruct, err := filter(rv.Field(i).Interface(), subfield)
 			if err != nil {
@@ -105,7 +92,7 @@ func filterStructFields(v interface{}, out *map[string]interface{}, level *level
 			continue
 		}
 
-		if level.containsField(tagName) {
+		if tree.containsField(tagName) {
 			(*out)[tagName] = rv.Field(i).Interface()
 		}
 	}

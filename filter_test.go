@@ -42,8 +42,8 @@ func TestFilterJsonFields__should_filter_struct_ptr(t *testing.T) {
 	s := newTestStruct()
 	s.E = newTestStruct()
 
-	fields := "{a c e { c } }"
-	res, err := Filter(s, fields)
+	query := "{a c e { c } }"
+	res, err := Filter(s, query)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -61,8 +61,8 @@ func TestFilterJsonFields__should_not_filter_empty_query(t *testing.T) {
 	s := newTestStruct()
 	s.E = newTestStruct()
 
-	fields := ""
-	res, err := Filter(s, fields)
+	query := ""
+	res, err := Filter(s, query)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -79,8 +79,8 @@ func TestFilterJsonFields__should_filter_slice(t *testing.T) {
 		slice = append(slice, s)
 	}
 
-	fields := "{ a e { a} }"
-	res, err := Filter(slice, fields)
+	query := "{ a e { a} }"
+	res, err := Filter(slice, query)
 	if err != nil {
 		t.Fatal(err)
 	}
