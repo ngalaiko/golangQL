@@ -2,14 +2,14 @@
 
 golangQL allows you to use [graphQL](http://graphql.org/) syntactics to select fields from `json`-tagged 
 structs in Golang.
- 
+
 ## Installation
 To install the library, run:
 ```bash
 go get github.com/ngalayko/golangQL
 ```
 
-##Use
+## Use
 See [example](example) folder
 
 ## Third Party Libraries
