@@ -8,7 +8,7 @@ golangQL.Filter(v interface{}, query string)
 ``` 
 returns an `interface{}` value which actually is a `map[string]interface{}`. Keys of this map are `json`-tags and values are values of struct fields. So result of `json.Marshal(v interface{})` will contain only fields that were described in `graphQL query`.
 
-See [example](example) folder.
+See [example](example/main.go).
 
 ## Features
 All filter functions are cached, for field structs also, so if you request 
