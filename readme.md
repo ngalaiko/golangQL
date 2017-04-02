@@ -4,7 +4,7 @@ golangQL allows you to use [graphQL](http://graphql.org/) syntactics to select f
 
 ## Description
 ```go
-golangQL.Filter(v interface{}, query string)
+func Filter(v interface{}, query string) (interface{}, error)
 ``` 
 returns an `interface{}` value which actually is a `map[string]interface{}`. Keys of this map are `json`-tags and values are values of struct fields. So result of `json.Marshal(v interface{})` will contain only fields that were described in `graphQL query`. Null values are skipped.
 
@@ -34,7 +34,6 @@ it also will cache
       } 
 }
 ```
-and 
 ```graphQL
 {
   name {
@@ -42,6 +41,13 @@ and
       lastName
     } 
  }
+```
+```graphQL
+{
+  name { 
+    firstName 
+  } 
+}
 ```
 requests for the relevant types.
 
