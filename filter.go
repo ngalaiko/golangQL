@@ -67,7 +67,7 @@ func (g *golangQL) newFilter(typ reflect.Type, tree *node) filterFunc {
 		return g.newPtrFilter(typ, tree)
 	case reflect.Struct:
 		return g.newStructFilter(typ, tree)
-	case reflect.Slice:
+	case reflect.Slice, reflect.Array:
 		return g.newSliceFilter(typ, tree)
 	default:
 		return defaultFilter()
@@ -96,6 +96,10 @@ func (g *golangQL) newSliceFilter(typ reflect.Type, tree *node) filterFunc {
 	elemFilter := g.getFilter(typ.Elem(), tree)
 
 	return func(val reflect.Value, tree *node) (interface{}, error) {
+		if !val.IsValid() {
+			return nil, nil
+		}
+
 		resultMap := make([]map[string]interface{}, val.Len())
 		resultMapValue := reflect.ValueOf(resultMap)
 		for i := 0; i < val.Len(); i++ {
@@ -128,14 +132,15 @@ func (g *golangQL) newStructFilter(typ reflect.Type, tree *node) filterFunc {
 	}
 
 	return func(val reflect.Value, tree *node) (interface{}, error) {
+		if !val.IsValid() {
+			return nil, nil
+		}
+
 		typ := val.Type()
 		resultMap := make(map[string]interface{}, typ.NumField())
 
 		for _, field := range fields {
 			fieldValue := fieldByIndex(val, field.index)
-			if !fieldValue.IsValid() {
-				continue
-			}
 
 			child := tree.findChildByName(field.tag)
 			if child != nil {

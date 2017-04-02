@@ -67,6 +67,44 @@ func TestFilterJsonFields__should_filter_struct_ptr(t *testing.T) {
 	assert.False(t, v.MapIndex(valueB).IsValid())
 }
 
+func TestFilterJsonFields__should_filter_struct(t *testing.T) {
+	s := newTestStruct()
+	s.E = newTestStruct()
+
+	query := "{a c e { c } }"
+	res, err := Filter(*s, query)
+	if err != nil {
+		t.Fatal(err)
+	}
+	v := reflect.ValueOf(res)
+
+	assert.True(t, v.MapIndex(valueA).IsValid())
+	assert.True(t, v.MapIndex(valueC).IsValid())
+	assert.True(t, v.MapIndex(valueE).IsValid())
+	assert.True(t, v.MapIndex(valueE).IsValid())
+	assert.True(t, v.MapIndex(valueE).Elem().MapIndex(valueC).IsValid())
+	assert.False(t, v.MapIndex(valueB).IsValid())
+}
+
+func TestFilterJsonFields__should_filter_struct_ptr_with_nil_field(t *testing.T) {
+	s := newTestStruct()
+	s.E = nil
+
+	query := "{a c e { c } }"
+	res, err := Filter(s, query)
+	if err != nil {
+		t.Fatal(err)
+	}
+	v := reflect.ValueOf(res)
+
+	assert.True(t, v.MapIndex(valueA).IsValid())
+	assert.True(t, v.MapIndex(valueC).IsValid())
+	assert.True(t, v.MapIndex(valueE).IsValid())
+	assert.True(t, v.MapIndex(valueE).IsValid())
+	assert.False(t, v.MapIndex(valueE).Elem().IsValid())
+	assert.False(t, v.MapIndex(valueB).IsValid())
+}
+
 func TestFilterJsonFields__should_not_filter_nil_ptr(t *testing.T) {
 	query := ""
 	res, err := Filter(nil, query)
@@ -107,6 +145,35 @@ func TestFilterJsonFields__should_filter_slice(t *testing.T) {
 	v := reflect.ValueOf(res)
 
 	if assert.Equal(t, len(slice), v.Len()) {
+		for i := 0; i < v.Len(); i++ {
+			vi := v.Index(i)
+
+			assert.True(t, vi.MapIndex(valueA).IsValid())
+			assert.False(t, vi.MapIndex(valueB).IsValid())
+			assert.False(t, vi.MapIndex(valueC).IsValid())
+			assert.True(t, vi.MapIndex(valueE).IsValid())
+			assert.True(t, vi.MapIndex(valueE).Elem().MapIndex(valueA).IsValid())
+		}
+	}
+}
+
+func TestFilterJsonFields__should_filter_array(t *testing.T) {
+	array := [10]*testStruct{}
+
+	for i := 0; i < 10; i++ {
+		s := newTestStruct()
+		s.E = newTestStruct()
+		array[i] = s
+	}
+
+	query := "{ a e { a} }"
+	res, err := Filter(array, query)
+	if err != nil {
+		t.Fatal(err)
+	}
+	v := reflect.ValueOf(res)
+
+	if assert.Equal(t, len(array), v.Len()) {
 		for i := 0; i < v.Len(); i++ {
 			vi := v.Index(i)
 
