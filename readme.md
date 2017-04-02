@@ -6,7 +6,7 @@ golangQL allows you to use [graphQL](http://graphql.org/) syntactics to select f
 ```go
 golangQL.Filter(v interface{}, query string)
 ``` 
-returns an `interface{}` value which actually is a `map[string]interface{}`. Keys of this map are `json`-tags and values are values of struct fields. So result of `json.Marshal(v interface{})` will contain only fields that were described in `graphQL query`.
+returns an `interface{}` value which actually is a `map[string]interface{}`. Keys of this map are `json`-tags and values are values of struct fields. So result of `json.Marshal(v interface{})` will contain only fields that were described in `graphQL query`. Null values are skipped.
 
 See [example](example/main.go).
 
