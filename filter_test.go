@@ -99,9 +99,7 @@ func TestFilterJsonFields__should_filter_struct_ptr_with_nil_field(t *testing.T)
 
 	assert.True(t, v.MapIndex(valueA).IsValid())
 	assert.True(t, v.MapIndex(valueC).IsValid())
-	assert.True(t, v.MapIndex(valueE).IsValid())
-	assert.True(t, v.MapIndex(valueE).IsValid())
-	assert.False(t, v.MapIndex(valueE).Elem().IsValid())
+	assert.False(t, v.MapIndex(valueE).IsValid())
 	assert.False(t, v.MapIndex(valueB).IsValid())
 }
 
