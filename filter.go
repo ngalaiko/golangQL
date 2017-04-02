@@ -133,6 +133,10 @@ func (g *golangQL) newStructFilter(typ reflect.Type, tree *node) filterFunc {
 
 		for _, field := range fields {
 			fieldValue := fieldByIndex(val, field.index)
+			if !fieldValue.IsValid() {
+				continue
+			}
+
 			child := tree.findChildByName(field.tag)
 			if child != nil {
 				childStruct, err := field.filter(fieldValue, child)
