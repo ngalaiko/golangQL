@@ -1,4 +1,4 @@
-# golangQL
+# golangQL [![Build Status](https://travis-ci.org/ngalayko/golangQL.svg?branch=master)](https://travis-ci.org/ngalayko/golangQL)
 
 golangQL allows you to use [graphQL](http://graphql.org/) syntactics to select fields from `json`-tagged Golang structs.
 
