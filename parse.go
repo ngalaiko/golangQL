@@ -16,6 +16,7 @@ const (
 
 var (
 	ErrWrongGQLFormat = errors.New("errors.GQLWrongFormat")
+	spacesRegEx = regexp.MustCompile("( )+")
 )
 
 func parse(query string) (*node, error) {
@@ -81,11 +82,7 @@ func formatQuery(query string) (string, error) {
 
 func deleteDoubleSpaces(str string) (string, error) {
 	str = strings.TrimSpace(str)
-	r, err := regexp.Compile("( )+")
-	if err != nil {
-		return "", err
-	}
-	str = r.ReplaceAllString(str, " ")
+	str = spacesRegEx.ReplaceAllString(str, " ")
 
 	return str, nil
 }
